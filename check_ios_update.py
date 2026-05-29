@@ -137,7 +137,7 @@ def send_alert_email(new_versions: list[dict]):
     <body style="margin:0; padding:0; background:#f5f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;">
         <div style="max-width:640px; margin:40px auto; background:white; border-radius:20px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
             <div style="background:#1d1d1f; padding:32px; text-align:center;">
-                <div style="font-size:48px; margin-bottom:8px;"></div>
+                <div style="color:white; style="font-size:48px; margin-bottom:8px;"></div>
                 <h1 style="color:white; margin:0; font-size:22px; font-weight:700;">Nouvelle mise à jour détectée</h1>
                 <p style="color:#a1a1a6; margin:8px 0 0; font-size:14px;">{summary}</p>
             </div>
