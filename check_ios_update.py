@@ -30,7 +30,7 @@ CONFIG = {
         "iOS":    "iPhone18,3",   # iPhone 17 Pro
     },
 
-    "from_email":    formataddr(("iOS Update Alert", os.environ.get("SMTP_USER", "")))
+    "from_email":    formataddr(("iOS Update Alert", os.environ.get("SMTP_USER", ""))),
     "to_emails":    [os.environ.get("TO_EMAIL", "kosselaer@apple.com")],
     "smtp_host":     "smtp.gmail.com",
     "smtp_port":     587,
