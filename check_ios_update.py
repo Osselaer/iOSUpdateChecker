@@ -29,7 +29,7 @@ CONFIG = {
         "iOS":    "iPhone18,3",   # iPhone 17 Pro
     },
 
-    "from_email":    os.environ.get("SMTP_USER", ""),
+    "from_email":    f"iOS Update Alert <{os.environ.get('SMTP_USER', '')}>",
     "to_emails":    [os.environ.get("TO_EMAIL", "kosselaer@apple.com")],
     "smtp_host":     "smtp.gmail.com",
     "smtp_port":     587,
@@ -186,7 +186,7 @@ def send_alert_email(new_versions: list[dict]):
             server.starttls()
             if CONFIG["smtp_user"] and CONFIG["smtp_password"]:
                 server.login(CONFIG["smtp_user"], CONFIG["smtp_password"])
-            server.sendmail(CONFIG["from_email"], CONFIG["to_emails"], msg.as_string())
+            server.sendmail(CONFIG["smtp_user"], CONFIG["to_emails"], msg.as_string())
         print(f"[✓] Email envoyé à : {', '.join(CONFIG['to_emails'])}")
     except Exception as e:
         print(f"[✗] Erreur envoi email : {e}")
