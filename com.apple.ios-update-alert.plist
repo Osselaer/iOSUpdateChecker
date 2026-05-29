@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent pour exécuter check_ios_update.py toutes les heures.
+  Installation :
+    cp com.apple.ios-update-alert.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.apple.ios-update-alert.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.apple.ios-update-alert</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/kosselaer/Documents/ios-update-alert/check_ios_update.py</string>
+    </array>
+
+    <!-- Lancer toutes les heures (3600 secondes) -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+
+    <!-- Lancer au chargement de l'agent -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Logs -->
+    <key>StandardOutPath</key>
+    <string>/Users/kosselaer/Documents/ios-update-alert/logs/output.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/kosselaer/Documents/ios-update-alert/logs/error.log</string>
+
+    <!-- Relancer en cas d'erreur -->
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>

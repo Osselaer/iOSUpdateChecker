@@ -1,0 +1,32 @@
+name: iOS Update Alert
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Toutes les heures
+  workflow_dispatch:       # Permet un lancement manuel depuis GitHub
+
+jobs:
+  check-ios-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🔍 Vérifier les mises à jour iOS
+        env:
+          SMTP_USER:     ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          TO_EMAIL:      ${{ secrets.TO_EMAIL }}
+        run: python3 check_ios_update.py
+
+      - name: 💾 Sauvegarder le cache
+        uses: actions/cache@v4
+        with:
+          path: last_known_version.json
+          key: ios-update-cache-${{ runner.os }}
