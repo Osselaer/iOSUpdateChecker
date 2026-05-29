@@ -20,7 +20,7 @@
 
     <!-- Lancer toutes les heures (3600 secondes) -->
     <key>StartInterval</key>
-    <integer>1800</integer>
+    <integer>900</integer>
 
     <!-- Lancer au chargement de l'agent -->
     <key>RunAtLoad</key>
