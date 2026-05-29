@@ -16,6 +16,7 @@ import urllib.error
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formataddr
 
 # ─────────────────────────────────────────────
 # CONFIGURATION
@@ -29,7 +30,7 @@ CONFIG = {
         "iOS":    "iPhone18,3",   # iPhone 17 Pro
     },
 
-    "from_email":    f"iOS Update Alert <{os.environ.get('SMTP_USER', '')}>",
+    "from_email":    formataddr(("iOS Update Alert", os.environ.get("SMTP_USER", "")))
     "to_emails":    [os.environ.get("TO_EMAIL", "kosselaer@apple.com")],
     "smtp_host":     "smtp.gmail.com",
     "smtp_port":     587,
