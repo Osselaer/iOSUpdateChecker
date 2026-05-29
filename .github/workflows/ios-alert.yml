@@ -2,8 +2,8 @@ name: iOS Update Alert
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Toutes les heures
-  workflow_dispatch:       # Permet un lancement manuel depuis GitHub
+    - cron: '0,15,30,45 * * * *'  # Toutes les 15 minutes
+  workflow_dispatch:                # Permet un lancement manuel depuis GitHub
 
 jobs:
   check-ios-update:
