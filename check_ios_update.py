@@ -32,7 +32,7 @@ CONFIG = {
     },
 
     # Email expéditeur
-    "from_email": "kosselaer@apple.com",
+    "from_email": "osselaer.kevin.ko@gmail.com",
 
     # Destinataires des alertes (ajouter d'autres emails si besoin)
     "to_emails": ["kosselaer@apple.com"],
@@ -43,8 +43,8 @@ CONFIG = {
     # Pour Outlook : smtp.office365.com / port 587
     "smtp_host": "smtp.gmail.com",
     "smtp_port": 587,
-    "smtp_user": "",       # Ton adresse email SMTP (laisser vide si pas d'auth)
-    "smtp_password": "",   # Ton mot de passe ou App Password (laisser vide si pas d'auth)
+    "smtp_user": "osselaer.kevin.ko@gmail.com",       # Ton adresse email SMTP (laisser vide si pas d'auth)
+    "smtp_password": "psem jgec cqep wgse",   # Ton mot de passe ou App Password (laisser vide si pas d'auth)
 }
 
 # ─────────────────────────────────────────────
