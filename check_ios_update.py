@@ -30,7 +30,7 @@ CONFIG = {
     },
 
     "from_email":    os.environ.get("SMTP_USER", ""),
-    "to_emails":    [os.environ.get("TO_EMAIL", "kosselaer@gmx.com")],
+    "to_emails":    [os.environ.get("TO_EMAIL", "kosselaer@apple.com")],
     "smtp_host":     "smtp.gmail.com",
     "smtp_port":     587,
     "smtp_user":     os.environ.get("SMTP_USER", ""),
