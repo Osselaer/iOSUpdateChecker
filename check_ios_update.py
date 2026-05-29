@@ -26,7 +26,7 @@ CONFIG = {
     "cache_file": os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_known_version.json"),
 
     "devices": {
-        "iOS":    "iPhone16,2",   # iPhone 15 Pro Max
+        "iOS":    "iPhone18,3",   # iPhone 17 Pro
     },
 
     "from_email":    os.environ.get("SMTP_USER", ""),
@@ -136,7 +136,7 @@ def send_alert_email(new_versions: list[dict]):
     <body style="margin:0; padding:0; background:#f5f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;">
         <div style="max-width:640px; margin:40px auto; background:white; border-radius:20px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
             <div style="background:#1d1d1f; padding:32px; text-align:center;">
-                <div style="font-size:68px; margin-bottom:8px;"></div>
+                <div style="font-size:48px; margin-bottom:8px;"></div>
                 <h1 style="color:white; margin:0; font-size:22px; font-weight:700;">Nouvelle mise à jour détectée</h1>
                 <p style="color:#a1a1a6; margin:8px 0 0; font-size:14px;">{summary}</p>
             </div>
@@ -160,8 +160,6 @@ def send_alert_email(new_versions: list[dict]):
                     <p style="margin:0 0 10px; font-weight:600; font-size:14px;">🔗 Liens utiles</p>
                     <p style="margin:4px 0; font-size:14px;">📋 <a href="https://support.apple.com/en-us/111900" style="color:#0071e3; text-decoration:none;">Notes de version Apple</a></p>
                     <p style="margin:4px 0; font-size:14px;">📱 <a href="https://developer.apple.com/news/releases/" style="color:#0071e3; text-decoration:none;">Apple Developer Releases</a></p>
-                    <p style="margin:4px 0; font-size:14px;">🔍 <a href="https://ipsw.me" style="color:#0071e3; text-decoration:none;">IPSW.me — Téléchargements firmware</a></p>
-                </div>
             </div>
             <div style="padding:20px 32px; border-top:1px solid #e5e5ea; text-align:center;">
                 <p style="margin:0; font-size:12px; color:#a1a1a6;">
