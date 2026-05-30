@@ -1,11 +1,1 @@
-{
-  "iOS": {
-    "product": "iOS",
-    "device_id": "iPhone18,3",
-    "version": "26.5",
-    "build": "23F77",
-    "release_date": "2026-05-11T17:48:03Z",
-    "filesize": 11346513692,
-    "url": "https://updates.cdn-apple.com/2026SpringFCS/fullrestores/122-59599/450F9107-3236-4F2A-9A7B-806E99CD1568/iPhone18,3_26.5_23F77_Restore.ipsw"
-  }
-}
+{}
