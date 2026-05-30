@@ -1,285 +1,173 @@
 #!/usr/bin/env python3
-"""
-iOS Public Update Alert System — Version publique (API IPSW.me)
-Surveille les mises à jour iOS/iPadOS publiques via https://api.ipsw.me
-et envoie une alerte par email + SMS Free Mobile dès qu'une nouvelle version est détectée.
-
-Compatible : macOS, Linux, Raspberry Pi, GitHub Actions
-Aucun accès au réseau Apple requis.
-"""
-
-import json
-import os
-import smtplib
-import urllib.request
-import urllib.error
-import urllib.parse
-from datetime import datetime
+import json, os, smtplib, urllib.request, urllib.error, urllib.parse
+from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import formataddr
+from email.utils import formataddr, format_datetime
 
-# ─────────────────────────────────────────────
-# CONFIGURATION
-# ─────────────────────────────────────────────
 CONFIG = {
     "cache_file": os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_known_version.json"),
-
-    "devices": {
-        "iOS": "iPhone18,3",  # iPhone 17 Pro
-    },
-
-    # Email
+    "rss_file":   os.path.join(os.path.dirname(os.path.abspath(__file__)), "feed.xml"),
+    "devices": {"iOS": "iPhone18,3"},
     "from_email":    formataddr(("iOS Update Alert", os.environ.get("SMTP_USER", ""))),
     "to_emails":     [os.environ.get("TO_EMAIL", "kosselaer@apple.com")],
     "smtp_host":     "smtp.gmail.com",
     "smtp_port":     587,
     "smtp_user":     os.environ.get("SMTP_USER", ""),
     "smtp_password": os.environ.get("SMTP_PASSWORD", ""),
-
-    # SMS Free Mobile
-    "free_user":    os.environ.get("FREE_USER", ""),
-    "free_api_key": os.environ.get("FREE_API_KEY", ""),
+    "free_user":     os.environ.get("FREE_USER", ""),
+    "free_api_key":  os.environ.get("FREE_API_KEY", ""),
+    "rss_link":      "https://osselaer.github.io/iOSUpdateChecker/feed.xml",
 }
 
-# ─────────────────────────────────────────────
-# FONCTIONS UTILITAIRES
-# ─────────────────────────────────────────────
-
-def load_cache() -> dict:
+def load_cache():
     if os.path.exists(CONFIG["cache_file"]):
         with open(CONFIG["cache_file"], "r") as f:
             return json.load(f)
     return {}
 
-
-def save_cache(data: dict):
+def save_cache(data):
     with open(CONFIG["cache_file"], "w") as f:
         json.dump(data, f, indent=2)
-    print(f"[✓] Cache mis à jour : {CONFIG['cache_file']}")
+    print(f"[✓] Cache mis à jour")
 
-
-def fetch_latest_version(product: str, device_id: str) -> dict | None:
+def fetch_latest_version(product, device_id):
     url = f"https://api.ipsw.me/v4/device/{device_id}?type=ipsw"
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "ios-update-alert/1.0 (python3)",
-            "Accept": "application/json",
-        }
-    )
-
+    req = urllib.request.Request(url, headers={"User-Agent": "ios-update-alert/1.0", "Accept": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
-            data = json.loads(response.read().decode("utf-8"))
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.loads(r.read().decode("utf-8"))
             firmwares = data.get("firmwares", [])
             if not firmwares:
-                print(f"[✗] Aucun firmware trouvé pour {device_id}")
                 return None
-
-            signed = [f for f in firmwares if f.get("signed", False)]
-            if not signed:
-                signed = firmwares
-
+            signed = [f for f in firmwares if f.get("signed", False)] or firmwares
             latest = signed[0]
             return {
-                "product":      product,
-                "device_id":    device_id,
-                "version":      latest.get("version", "N/A"),
-                "build":        latest.get("buildid", "N/A"),
+                "product": product, "device_id": device_id,
+                "version": latest.get("version", "N/A"),
+                "build": latest.get("buildid", "N/A"),
                 "release_date": latest.get("releasedate", "N/A"),
-                "filesize":     latest.get("filesize", 0),
-                "url":          latest.get("url", ""),
+                "filesize": latest.get("filesize", 0),
             }
-
-    except urllib.error.HTTPError as e:
-        print(f"[✗] HTTP {e.code} pour {device_id} : {e.reason}")
-        return None
-    except urllib.error.URLError as e:
-        print(f"[✗] Erreur réseau pour {device_id} : {e.reason}")
-        return None
-    except json.JSONDecodeError as e:
-        print(f"[✗] Erreur JSON pour {device_id} : {e}")
+    except Exception as e:
+        print(f"[✗] Erreur fetch {device_id} : {e}")
         return None
 
+def format_filesize(b):
+    if b >= 1_000_000_000: return f"{b/1_000_000_000:.1f} GB"
+    if b >= 1_000_000: return f"{b/1_000_000:.0f} MB"
+    return f"{b} B"
 
-def format_filesize(size_bytes: int) -> str:
-    if size_bytes >= 1_000_000_000:
-        return f"{size_bytes / 1_000_000_000:.1f} GB"
-    elif size_bytes >= 1_000_000:
-        return f"{size_bytes / 1_000_000:.0f} MB"
-    return f"{size_bytes} B"
-
-
-def format_date(iso_date: str) -> str:
+def format_date(iso):
     try:
-        dt = datetime.fromisoformat(iso_date.replace("Z", "+00:00"))
-        return dt.strftime("%d/%m/%Y")
-    except Exception:
-        return iso_date
+        return datetime.fromisoformat(iso.replace("Z", "+00:00")).strftime("%d/%m/%Y")
+    except:
+        return iso
 
+def update_rss(new_versions):
+    now = datetime.now(timezone.utc)
+    now_rfc822 = format_datetime(now)
+    existing_items = ""
+    if os.path.exists(CONFIG["rss_file"]):
+        with open(CONFIG["rss_file"], "r") as f:
+            content = f.read()
+            start = content.find("<item>")
+            end = content.rfind("</item>")
+            if start != -1 and end != -1:
+                existing_items = content[start:end + len("</item>")]
+    new_items = ""
+    for info in new_versions:
+        new_items += f"""
+    <item>
+        <title>iOS {info['version']} ({info['build']})</title>
+        <link>https://support.apple.com/en-us/111900</link>
+        <guid isPermaLink="false">{info['product']}-{info['version']}-{info['build']}</guid>
+        <pubDate>{now_rfc822}</pubDate>
+        <description><![CDATA[
+            <p><strong>{info['product']} {info['version']}</strong> est disponible.</p>
+            <ul>
+                <li><strong>Build :</strong> {info['build']}</li>
+                <li><strong>Date :</strong> {format_date(info['release_date'])}</li>
+                <li><strong>Taille :</strong> {format_filesize(info['filesize'])}</li>
+            </ul>
+        ]]></description>
+    </item>"""
+    rss = f"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>iOS Update Alert</title>
+        <link>{CONFIG['rss_link']}</link>
+        <description>Alertes mises à jour iOS publiques</description>
+        <language>fr-FR</language>
+        <lastBuildDate>{now_rfc822}</lastBuildDate>
+        <atom:link href="{CONFIG['rss_link']}" rel="self" type="application/rss+xml"/>
+        {new_items}
+        {existing_items}
+    </channel>
+</rss>"""
+    with open(CONFIG["rss_file"], "w") as f:
+        f.write(rss)
+    print(f"[✓] Flux RSS mis à jour : feed.xml")
 
-def send_sms(new_versions: list[dict]):
-    """Envoie un SMS via l'API Free Mobile."""
+def send_sms(new_versions):
     if not CONFIG["free_user"] or not CONFIG["free_api_key"]:
         print("[!] SMS ignoré : FREE_USER ou FREE_API_KEY manquant")
         return
-
     summary = ", ".join([f"{v['product']} {v['version']}" for v in new_versions])
-    message = f"Nouvelle mise a jour : {summary}"
-
-    params = urllib.parse.urlencode({
-        "user": CONFIG["free_user"],
-        "pass": CONFIG["free_api_key"],
-        "msg":  message,
-    })
-
-    url = f"https://smsapi.free-mobile.fr/sendmsg?{params}"
-
+    params = urllib.parse.urlencode({"user": CONFIG["free_user"], "pass": CONFIG["free_api_key"], "msg": f"Nouvelle mise a jour : {summary}"})
     try:
-        with urllib.request.urlopen(url, timeout=10) as response:
-            if response.status == 200:
-                print(f"[✓] SMS envoyé : {message}")
-            else:
-                print(f"[✗] Erreur SMS : code {response.status}")
-    except urllib.error.HTTPError as e:
-        codes = {
-            400: "Paramètre manquant",
-            402: "Trop de SMS envoyés",
-            403: "Identifiants incorrects ou option non activée",
-            500: "Erreur serveur Free Mobile",
-        }
-        print(f"[✗] Erreur SMS ({e.code}) : {codes.get(e.code, e.reason)}")
+        with urllib.request.urlopen(f"https://smsapi.free-mobile.fr/sendmsg?{params}", timeout=10) as r:
+            print(f"[✓] SMS envoyé") if r.status == 200 else print(f"[✗] Erreur SMS : {r.status}")
     except Exception as e:
         print(f"[✗] Erreur SMS : {e}")
 
-
-def send_alert_email(new_versions: list[dict]):
-    """Envoie un email HTML d'alerte."""
-    now = datetime.now().strftime("%d/%m/%Y à %H:%M")
-
-    rows = ""
-    for info in new_versions:
-        rows += f"""
-        <tr>
-            <td style="padding:12px 16px; border-bottom:1px solid #e5e5ea; font-weight:600;">{info['product']}</td>
-            <td style="padding:12px 16px; border-bottom:1px solid #e5e5ea; color:#0071e3; font-weight:700; font-size:16px;">{info['version']}</td>
-            <td style="padding:12px 16px; border-bottom:1px solid #e5e5ea; font-family:monospace; color:#6e6e73;">{info['build']}</td>
-            <td style="padding:12px 16px; border-bottom:1px solid #e5e5ea;">{format_date(info['release_date'])}</td>
-            <td style="padding:12px 16px; border-bottom:1px solid #e5e5ea; color:#6e6e73;">{format_filesize(info['filesize'])}</td>
-        </tr>
-        """
-
+def send_alert_email(new_versions):
     summary = ", ".join([f"{v['product']} {v['version']}" for v in new_versions])
-
-    html_body = f"""
-    <html>
-    <body style="margin:0; padding:0; background:#f5f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;">
-        <div style="max-width:640px; margin:40px auto; background:white; border-radius:20px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-            <div style="background:#1d1d1f; padding:32px; text-align:center;">
-                <div style="font-size:48px; margin-bottom:8px;">🍎</div>
-                <h1 style="color:white; margin:0; font-size:22px; font-weight:700;">Nouvelle mise à jour détectée</h1>
-                <p style="color:#a1a1a6; margin:8px 0 0; font-size:14px;">{summary}</p>
-            </div>
-            <div style="padding:32px;">
-                <p style="color:#6e6e73; font-size:14px; margin-top:0;">
-                    Détecté le <strong style="color:#1d1d1f;">{now}</strong> via IPSW.me
-                </p>
-                <table style="width:100%; border-collapse:collapse; margin-top:16px;">
-                    <thead>
-                        <tr style="background:#f5f5f7;">
-                            <th style="padding:10px 16px; text-align:left; font-size:12px; color:#6e6e73; text-transform:uppercase;">Produit</th>
-                            <th style="padding:10px 16px; text-align:left; font-size:12px; color:#6e6e73; text-transform:uppercase;">Version</th>
-                            <th style="padding:10px 16px; text-align:left; font-size:12px; color:#6e6e73; text-transform:uppercase;">Build</th>
-                            <th style="padding:10px 16px; text-align:left; font-size:12px; color:#6e6e73; text-transform:uppercase;">Date</th>
-                            <th style="padding:10px 16px; text-align:left; font-size:12px; color:#6e6e73; text-transform:uppercase;">Taille</th>
-                        </tr>
-                    </thead>
-                    <tbody>{rows}</tbody>
-                </table>
-                <div style="margin-top:28px; padding:20px; background:#f5f5f7; border-radius:12px;">
-                    <p style="margin:0 0 10px; font-weight:600; font-size:14px;">🔗 Liens utiles</p>
-                    <p style="margin:4px 0; font-size:14px;">📋 <a href="https://support.apple.com/en-us/111900" style="color:#0071e3; text-decoration:none;">Notes de version Apple</a></p>
-                    <p style="margin:4px 0; font-size:14px;">📱 <a href="https://developer.apple.com/news/releases/" style="color:#0071e3; text-decoration:none;">Apple Developer Releases</a></p>
-                    <p style="margin:4px 0; font-size:14px;">🔍 <a href="https://ipsw.me" style="color:#0071e3; text-decoration:none;">IPSW.me — Téléchargements firmware</a></p>
-                </div>
-            </div>
-            <div style="padding:20px 32px; border-top:1px solid #e5e5ea; text-align:center;">
-                <p style="margin:0; font-size:12px; color:#a1a1a6;">
-                    Envoyé automatiquement par <strong>iOS Update Alert</strong><br>
-                    Source : <a href="https://api.ipsw.me" style="color:#0071e3;">api.ipsw.me</a>
-                </p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-
-    subject = f"🍎 Nouvelle mise à jour publique : {summary}"
-
+    rows = "".join([f"<tr><td>{v['product']}</td><td>{v['version']}</td><td>{v['build']}</td><td>{format_date(v['release_date'])}</td><td>{format_filesize(v['filesize'])}</td></tr>" for v in new_versions])
+    html = f"<html><body><h2>🍎 {summary}</h2><table border='1'><tr><th>Produit</th><th>Version</th><th>Build</th><th>Date</th><th>Taille</th></tr>{rows}</table><p><a href='{CONFIG['rss_link']}'>Flux RSS</a></p></body></html>"
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"]    = CONFIG["from_email"]
-    msg["To"]      = ", ".join(CONFIG["to_emails"])
-    msg.attach(MIMEText(html_body, "html"))
-
+    msg["Subject"] = f"🍎 Nouvelle mise à jour : {summary}"
+    msg["From"] = CONFIG["from_email"]
+    msg["To"] = ", ".join(CONFIG["to_emails"])
+    msg.attach(MIMEText(html, "html"))
     try:
-        with smtplib.SMTP(CONFIG["smtp_host"], CONFIG["smtp_port"]) as server:
-            server.ehlo()
-            server.starttls()
+        with smtplib.SMTP(CONFIG["smtp_host"], CONFIG["smtp_port"]) as s:
+            s.ehlo(); s.starttls()
             if CONFIG["smtp_user"] and CONFIG["smtp_password"]:
-                server.login(CONFIG["smtp_user"], CONFIG["smtp_password"])
-            server.sendmail(CONFIG["smtp_user"], CONFIG["to_emails"], msg.as_string())
-        print(f"[✓] Email envoyé à : {', '.join(CONFIG['to_emails'])}")
+                s.login(CONFIG["smtp_user"], CONFIG["smtp_password"])
+            s.sendmail(CONFIG["smtp_user"], CONFIG["to_emails"], msg.as_string())
+        print(f"[✓] Email envoyé")
     except Exception as e:
-        print(f"[✗] Erreur envoi email : {e}")
-
-
-# ─────────────────────────────────────────────
-# PROGRAMME PRINCIPAL
-# ─────────────────────────────────────────────
+        print(f"[✗] Erreur email : {e}")
 
 def main():
-    print(f"\n{'='*52}")
-    print(f"  iOS Update Alert (IPSW.me) — {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-    print(f"{'='*52}\n")
-
+    print(f"\n{'='*52}\n  iOS Update Alert — {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n{'='*52}\n")
     cache = load_cache()
-    print(f"[i] Cache : {cache if cache else 'vide (première exécution)'}\n")
-
+    print(f"[i] Cache : {cache if cache else 'vide'}\n")
     new_versions = []
-
     for product, device_id in CONFIG["devices"].items():
-        print(f"[→] Vérification de {product} ({device_id})...")
+        print(f"[→] Vérification de {product}...")
         info = fetch_latest_version(product, device_id)
-
         if not info:
-            print(f"[✗] Impossible de récupérer les infos pour {product}\n")
             continue
-
-        current_version = info["version"]
-        cached_version  = cache.get(product, {}).get("version")
-
-        print(f"    Version actuelle : {current_version} ({info['build']})")
-        print(f"    Version en cache : {cached_version or 'aucune'}")
-
-        if cached_version != current_version:
-            print(f"    ✅ NOUVELLE VERSION : {cached_version or 'N/A'} → {current_version}\n")
+        current = info["version"]
+        cached = cache.get(product, {}).get("version")
+        print(f"    Version actuelle : {current} | En cache : {cached or 'aucune'}")
+        if cached != current:
+            print(f"    ✅ NOUVELLE VERSION : {cached or 'N/A'} → {current}\n")
             new_versions.append(info)
             cache[product] = info
         else:
             print(f"    = Pas de changement\n")
-
     if new_versions:
         print("[!] Envoi des alertes...")
         send_alert_email(new_versions)
         send_sms(new_versions)
+        update_rss(new_versions)
         save_cache(cache)
     else:
         print("[✓] Aucune nouvelle mise à jour détectée.")
-
     print(f"\n{'='*52}\n")
-
 
 if __name__ == "__main__":
     main()
