@@ -2,8 +2,8 @@ name: iOS Update Alert
 
 on:
   schedule:
-    - cron: '0,15,30,45 * * * *'  # Toutes les 15 minutes
-  workflow_dispatch:                # Permet un lancement manuel depuis GitHub
+    - cron: '0,15,30,45 * * * *'
+  workflow_dispatch:
 
 jobs:
   check-ios-update:
@@ -18,6 +18,13 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: 📦 Restaurer le cache
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: last_known_version.json
+          key: ios-version-cache
+
       - name: 🔍 Vérifier les mises à jour iOS
         env:
           SMTP_USER:     ${{ secrets.SMTP_USER }}
@@ -26,7 +33,7 @@ jobs:
         run: python3 check_ios_update.py
 
       - name: 💾 Sauvegarder le cache
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path: last_known_version.json
-          key: ios-update-cache-${{ runner.os }}
+          key: ios-version-cache-${{ github.run_id }}
