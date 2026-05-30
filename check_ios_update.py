@@ -2,7 +2,7 @@
 """
 iOS Public Update Alert System — Version publique (API IPSW.me)
 Surveille les mises à jour iOS/iPadOS publiques via https://api.ipsw.me
-et envoie une alerte par email dès qu'une nouvelle version est détectée.
+et envoie une alerte par email + SMS Free Mobile dès qu'une nouvelle version est détectée.
 
 Compatible : macOS, Linux, Raspberry Pi, GitHub Actions
 Aucun accès au réseau Apple requis.
@@ -13,6 +13,7 @@ import os
 import smtplib
 import urllib.request
 import urllib.error
+import urllib.parse
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -20,22 +21,25 @@ from email.utils import formataddr
 
 # ─────────────────────────────────────────────
 # CONFIGURATION
-# Les valeurs sont lues depuis les variables d'environnement (GitHub Secrets)
-# ou depuis les valeurs par défaut ci-dessous.
 # ─────────────────────────────────────────────
 CONFIG = {
     "cache_file": os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_known_version.json"),
 
     "devices": {
-        "iOS":    "iPhone18,3",   # iPhone 17 Pro
+        "iOS": "iPhone18,3",  # iPhone 17 Pro
     },
 
+    # Email
     "from_email":    formataddr(("iOS Update Alert", os.environ.get("SMTP_USER", ""))),
-    "to_emails":    [os.environ.get("TO_EMAIL", "kosselaer@apple.com")],
+    "to_emails":     [os.environ.get("TO_EMAIL", "kosselaer@apple.com")],
     "smtp_host":     "smtp.gmail.com",
     "smtp_port":     587,
     "smtp_user":     os.environ.get("SMTP_USER", ""),
     "smtp_password": os.environ.get("SMTP_PASSWORD", ""),
+
+    # SMS Free Mobile
+    "free_user":    os.environ.get("FREE_USER", ""),
+    "free_api_key": os.environ.get("FREE_API_KEY", ""),
 }
 
 # ─────────────────────────────────────────────
@@ -115,7 +119,43 @@ def format_date(iso_date: str) -> str:
         return iso_date
 
 
+def send_sms(new_versions: list[dict]):
+    """Envoie un SMS via l'API Free Mobile."""
+    if not CONFIG["free_user"] or not CONFIG["free_api_key"]:
+        print("[!] SMS ignoré : FREE_USER ou FREE_API_KEY manquant")
+        return
+
+    summary = ", ".join([f"{v['product']} {v['version']}" for v in new_versions])
+    message = f"Nouvelle mise a jour : {summary}"
+
+    params = urllib.parse.urlencode({
+        "user": CONFIG["free_user"],
+        "pass": CONFIG["free_api_key"],
+        "msg":  message,
+    })
+
+    url = f"https://smsapi.free-mobile.fr/sendmsg?{params}"
+
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            if response.status == 200:
+                print(f"[✓] SMS envoyé : {message}")
+            else:
+                print(f"[✗] Erreur SMS : code {response.status}")
+    except urllib.error.HTTPError as e:
+        codes = {
+            400: "Paramètre manquant",
+            402: "Trop de SMS envoyés",
+            403: "Identifiants incorrects ou option non activée",
+            500: "Erreur serveur Free Mobile",
+        }
+        print(f"[✗] Erreur SMS ({e.code}) : {codes.get(e.code, e.reason)}")
+    except Exception as e:
+        print(f"[✗] Erreur SMS : {e}")
+
+
 def send_alert_email(new_versions: list[dict]):
+    """Envoie un email HTML d'alerte."""
     now = datetime.now().strftime("%d/%m/%Y à %H:%M")
 
     rows = ""
@@ -137,7 +177,7 @@ def send_alert_email(new_versions: list[dict]):
     <body style="margin:0; padding:0; background:#f5f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;">
         <div style="max-width:640px; margin:40px auto; background:white; border-radius:20px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
             <div style="background:#1d1d1f; padding:32px; text-align:center;">
-                <div style="color:white; style="font-size:48px; margin-bottom:8px;"></div>
+                <div style="font-size:48px; margin-bottom:8px;">🍎</div>
                 <h1 style="color:white; margin:0; font-size:22px; font-weight:700;">Nouvelle mise à jour détectée</h1>
                 <p style="color:#a1a1a6; margin:8px 0 0; font-size:14px;">{summary}</p>
             </div>
@@ -161,6 +201,8 @@ def send_alert_email(new_versions: list[dict]):
                     <p style="margin:0 0 10px; font-weight:600; font-size:14px;">🔗 Liens utiles</p>
                     <p style="margin:4px 0; font-size:14px;">📋 <a href="https://support.apple.com/en-us/111900" style="color:#0071e3; text-decoration:none;">Notes de version Apple</a></p>
                     <p style="margin:4px 0; font-size:14px;">📱 <a href="https://developer.apple.com/news/releases/" style="color:#0071e3; text-decoration:none;">Apple Developer Releases</a></p>
+                    <p style="margin:4px 0; font-size:14px;">🔍 <a href="https://ipsw.me" style="color:#0071e3; text-decoration:none;">IPSW.me — Téléchargements firmware</a></p>
+                </div>
             </div>
             <div style="padding:20px 32px; border-top:1px solid #e5e5ea; text-align:center;">
                 <p style="margin:0; font-size:12px; color:#a1a1a6;">
@@ -173,7 +215,7 @@ def send_alert_email(new_versions: list[dict]):
     </html>
     """
 
-    subject = f" Nouvelle mise à jour publique : {summary}"
+    subject = f"🍎 Nouvelle mise à jour publique : {summary}"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
@@ -229,8 +271,9 @@ def main():
             print(f"    = Pas de changement\n")
 
     if new_versions:
-        print("[!] Envoi de l'alerte email...")
+        print("[!] Envoi des alertes...")
         send_alert_email(new_versions)
+        send_sms(new_versions)
         save_cache(cache)
     else:
         print("[✓] Aucune nouvelle mise à jour détectée.")
