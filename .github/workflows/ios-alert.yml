@@ -37,7 +37,7 @@ jobs:
         run: |
           git config user.name "iOS Update Alert Bot"
           git config user.email "actions@github.com"
-          git add last_known_version.json
+          git add last_known_version.json feed.xml
           if git diff --cached --quiet; then
             echo "✅ Pas de changement à sauvegarder"
             exit 0
