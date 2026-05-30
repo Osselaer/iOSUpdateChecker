@@ -1,1 +1,10 @@
-{}
+{
+  "iOS": {
+    "product": "iOS",
+    "device_id": "iPhone18,3",
+    "version": "26.5",
+    "build": "23F77",
+    "release_date": "2026-05-11T17:48:03Z",
+    "filesize": 11346513692
+  }
+}
