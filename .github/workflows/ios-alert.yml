@@ -19,11 +19,12 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Restaurer le cache
-        id: cache-restore
         uses: actions/cache/restore@v4
         with:
           path: last_known_version.json
-          key: ios-version-cache
+          key: ios-version-cache-${{ github.run_id }}
+          restore-keys: |
+            ios-version-cache-
 
       - name: 🔍 Vérifier les mises à jour iOS
         env:
