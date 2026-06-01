@@ -5,10 +5,24 @@
         <link>https://osselaer.github.io/iOSUpdateChecker/feed.xml</link>
         <description>Alertes mises à jour iOS publiques</description>
         <language>fr-FR</language>
-        <lastBuildDate>Sat, 30 May 2026 12:01:30 +0000</lastBuildDate>
+        <lastBuildDate>Mon, 01 Jun 2026 18:51:37 +0000</lastBuildDate>
         <atom:link href="https://osselaer.github.io/iOSUpdateChecker/feed.xml" rel="self" type="application/rss+xml"/>
         
     <item>
+        <title>iOS 26.5.1 (23F81)</title>
+        <link>https://support.apple.com/en-us/111900</link>
+        <guid isPermaLink="false">iOS-26.5.1-23F81</guid>
+        <pubDate>Mon, 01 Jun 2026 18:51:37 +0000</pubDate>
+        <description><![CDATA[
+            <p><strong>iOS 26.5.1</strong> est disponible.</p>
+            <ul>
+                <li><strong>Build :</strong> 23F81</li>
+                <li><strong>Date :</strong> 01/06/2026</li>
+                <li><strong>Taille :</strong> 11.3 GB</li>
+            </ul>
+        ]]></description>
+    </item>
+        <item>
         <title>iOS 26.5 (23F77)</title>
         <link>https://support.apple.com/en-us/111900</link>
         <guid isPermaLink="false">iOS-26.5-23F77</guid>
@@ -22,6 +36,5 @@
             </ul>
         ]]></description>
     </item>
-        
     </channel>
 </rss>
