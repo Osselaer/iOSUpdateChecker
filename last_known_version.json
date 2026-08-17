@@ -2,9 +2,9 @@
   "iOS": {
     "product": "iOS",
     "device_id": "iPhone18,3",
-    "version": "26.6",
-    "build": "23G71",
-    "release_date": "2026-07-27T17:38:15Z",
-    "filesize": 11481081380
+    "version": "26.6.1",
+    "build": "23G83",
+    "release_date": "2026-08-17T17:49:19Z",
+    "filesize": 11481263540
   }
 }

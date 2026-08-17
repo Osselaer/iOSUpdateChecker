@@ -5,10 +5,24 @@
         <link>https://osselaer.github.io/iOSUpdateChecker/feed.xml</link>
         <description>Alertes mises à jour iOS publiques</description>
         <language>fr-FR</language>
-        <lastBuildDate>Mon, 27 Jul 2026 18:54:02 +0000</lastBuildDate>
+        <lastBuildDate>Mon, 17 Aug 2026 18:56:26 +0000</lastBuildDate>
         <atom:link href="https://osselaer.github.io/iOSUpdateChecker/feed.xml" rel="self" type="application/rss+xml"/>
         
     <item>
+        <title>iOS 26.6.1 (23G83)</title>
+        <link>https://support.apple.com/en-us/111900</link>
+        <guid isPermaLink="false">iOS-26.6.1-23G83</guid>
+        <pubDate>Mon, 17 Aug 2026 18:56:26 +0000</pubDate>
+        <description><![CDATA[
+            <p><strong>iOS 26.6.1</strong> est disponible.</p>
+            <ul>
+                <li><strong>Build :</strong> 23G83</li>
+                <li><strong>Date :</strong> 17/08/2026</li>
+                <li><strong>Taille :</strong> 11.5 GB</li>
+            </ul>
+        ]]></description>
+    </item>
+        <item>
         <title>iOS 26.6 (23G71)</title>
         <link>https://support.apple.com/en-us/111900</link>
         <guid isPermaLink="false">iOS-26.6-23G71</guid>
