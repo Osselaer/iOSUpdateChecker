@@ -5,10 +5,24 @@
         <link>https://osselaer.github.io/iOSUpdateChecker/feed.xml</link>
         <description>Alertes mises à jour iOS publiques</description>
         <language>fr-FR</language>
-        <lastBuildDate>Mon, 14 Sep 2026 20:23:59 +0000</lastBuildDate>
+        <lastBuildDate>Mon, 28 Sep 2026 22:32:03 +0000</lastBuildDate>
         <atom:link href="https://osselaer.github.io/iOSUpdateChecker/feed.xml" rel="self" type="application/rss+xml"/>
         
     <item>
+        <title>iOS 27.0.1 (24A446)</title>
+        <link>https://support.apple.com/en-us/111900</link>
+        <guid isPermaLink="false">iOS-27.0.1-24A446</guid>
+        <pubDate>Mon, 28 Sep 2026 22:32:03 +0000</pubDate>
+        <description><![CDATA[
+            <p><strong>iOS 27.0.1</strong> est disponible.</p>
+            <ul>
+                <li><strong>Build :</strong> 24A446</li>
+                <li><strong>Date :</strong> 28/09/2026</li>
+                <li><strong>Taille :</strong> 12.8 GB</li>
+            </ul>
+        ]]></description>
+    </item>
+        <item>
         <title>iOS 27.0 (24A437)</title>
         <link>https://support.apple.com/en-us/111900</link>
         <guid isPermaLink="false">iOS-27.0-24A437</guid>
