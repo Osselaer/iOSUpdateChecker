@@ -5,10 +5,24 @@
         <link>https://osselaer.github.io/iOSUpdateChecker/feed.xml</link>
         <description>Alertes mises à jour iOS publiques</description>
         <language>fr-FR</language>
-        <lastBuildDate>Mon, 26 Oct 2026 19:42:33 +0000</lastBuildDate>
+        <lastBuildDate>Tue, 10 Nov 2026 01:45:59 +0000</lastBuildDate>
         <atom:link href="https://osselaer.github.io/iOSUpdateChecker/feed.xml" rel="self" type="application/rss+xml"/>
         
     <item>
+        <title>iOS 27.2.1 (24B156)</title>
+        <link>https://support.apple.com/en-us/111900</link>
+        <guid isPermaLink="false">iOS-27.2.1-24B156</guid>
+        <pubDate>Tue, 10 Nov 2026 01:45:59 +0000</pubDate>
+        <description><![CDATA[
+            <p><strong>iOS 27.2.1</strong> est disponible.</p>
+            <ul>
+                <li><strong>Build :</strong> 24B156</li>
+                <li><strong>Date :</strong> 09/11/2026</li>
+                <li><strong>Taille :</strong> 13.1 GB</li>
+            </ul>
+        ]]></description>
+    </item>
+        <item>
         <title>iOS 27.2 (24B119)</title>
         <link>https://support.apple.com/en-us/111900</link>
         <guid isPermaLink="false">iOS-27.2-24B119</guid>
